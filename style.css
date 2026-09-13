@@ -1,0 +1,224 @@
+.character-lens .cl_row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.character-lens .cl_row > div { flex: 1; }
+
+.character-lens .cl_head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.character-lens .cl_head small { opacity: 0.6; }
+
+.character-lens .cl_buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.character-lens textarea {
+    width: 100%;
+    font-size: 0.9em;
+    line-height: 1.35;
+}
+
+.character-lens small {
+    display: block;
+    opacity: 0.6;
+    margin: 2px 0 8px;
+}
+
+.character-lens label { margin-top: 8px; display: block; }
+
+/* a guide written from a card that has since changed */
+#cl_text.cl-stale { border-color: #ffb042 !important; }
+
+/* ============================================================
+   The panel is one card: who, the text, and what you can do with it.
+   Everything that is not those three things is folded away or is an icon.
+   ============================================================ */
+
+.character-lens .cl_card {
+    border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+    padding: 10px; background: rgba(255,255,255,.02);
+}
+.character-lens .cl_head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.character-lens .cl_who { min-width: 0; flex: 1; }
+.character-lens .cl_who b { display: block; font-size: .92rem; line-height: 1.2; }
+.character-lens .cl_who small { font-size: .72rem; opacity: .55; }
+
+/* the one action that matters, and it looks like it */
+.character-lens .cl_go {
+    display: flex; align-items: center; gap: 6px; flex: 0 0 auto;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: .82rem; font-weight: 600;
+    background: rgba(159,182,216,.18); border: 1px solid rgba(159,182,216,.45);
+    transition: filter .15s, opacity .15s;
+}
+.character-lens .cl_go:hover { filter: brightness(1.25); }
+.character-lens .cl_go.busy { pointer-events: none; opacity: .75; }
+.character-lens .cl_go.off { opacity: .4; pointer-events: none; }
+.character-lens .cl_spin { animation: cl-turn .8s linear infinite; }
+@keyframes cl-turn { to { transform: rotate(360deg); } }
+
+.character-lens #cl_text { width: 100%; line-height: 1.5; font-size: .84rem; }
+.character-lens #cl_text.cl-stale { border-color: #ffb042 !important; }
+
+.character-lens .cl_foot { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
+.character-lens .cl_mute { display: flex; align-items: center; gap: 5px; font-size: .78rem; opacity: .75; cursor: pointer; margin: 0; }
+.character-lens .cl_foot small { font-size: .72rem; opacity: .5; flex: 1; }
+.character-lens .cl_saved {
+    font-size: .72rem; color: #6ea44f; opacity: 0; transition: opacity .25s;
+    white-space: nowrap;
+}
+.character-lens .cl_saved.on { opacity: .85; }
+.character-lens .cl_icon {
+    padding: 5px 8px; border-radius: 5px; cursor: pointer; opacity: .45; font-size: .82rem;
+    transition: opacity .15s, background .15s, color .15s;
+}
+.character-lens .cl_icon:hover { opacity: 1; background: rgba(255,255,255,.08); }
+.character-lens .cl_icon.danger:hover { color: #e06c6c; background: rgba(224,108,108,.14); }
+.character-lens .cl_icon.off { opacity: .25; pointer-events: none; }
+
+/* the card moved on without the guide */
+.character-lens .cl_warn {
+    display: flex; align-items: center; gap: 8px; margin: 8px 0;
+    padding: 7px 10px; border-radius: 6px; font-size: .78rem; line-height: 1.4;
+    background: rgba(255,176,66,.12); border-left: 3px solid #ffb042;
+}
+.character-lens .cl_warn span { flex: 1; }
+.character-lens .cl_mini {
+    padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: .76rem; white-space: nowrap;
+    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.12);
+}
+.character-lens .cl_mini:hover { filter: brightness(1.3); }
+.character-lens .cl_mini.wide { width: fit-content; }
+.character-lens .cl_batch { display: flex; align-items: center; gap: 9px; margin: 8px 0; }
+.character-lens .cl_batch small { font-size: .74rem; opacity: .6; }
+
+/* the prompt stays in the open: people rewrite it, and hunting for it is a chore */
+.character-lens .cl_promptbox { margin-top: 12px; }
+.character-lens .cl_promptbox label { display: block; font-size: .8rem; opacity: .75; margin-bottom: 5px; }
+.character-lens .cl_promptbox textarea { width: 100%; font-size: .76rem; line-height: 1.45; }
+
+/* ============================================================
+   Scene Art (CG)
+   ============================================================ */
+.character-lens .cl_cg_spritebox {
+    display: flex; align-items: center; gap: 10px; margin: 8px 0;
+}
+.character-lens .cl_cg_spritepreview {
+    width: 64px; height: 64px; border-radius: 8px; flex: 0 0 auto;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.character-lens .cl_cg_spritepreview img { width: 100%; height: 100%; object-fit: cover; }
+.character-lens .cl_cg_spritepreview span { font-size: .68rem; opacity: .45; text-align: center; padding: 4px; }
+
+/* the message-row icon: same footprint as ST's own .mes_button icons */
+.mes_button.cl_cg_btn { cursor: pointer; opacity: .7; transition: opacity .15s, filter .15s; }
+.mes_button.cl_cg_btn:hover { opacity: 1; }
+.mes_button.cl_cg_btn.cl_cg_busy { opacity: .55; pointer-events: none; animation: cl-cg-pulse 1.1s ease-in-out infinite; }
+@keyframes cl-cg-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.6); } }
+
+/* the scene itself, sitting under the message text it was drawn for —
+   a printed photograph laid on the page, not a UI panel.
+   The wrap is only the box the loading state is toggled on and the room the tilt
+   and the shadow need; everything visible is on .cl_cg_photo inside it. */
+.cl_cg_wrap {
+    margin: 16px 0 10px;
+    max-width: min(420px, 100%);
+    padding: 12px 10px 6px;   /* headroom for the clip tag and the rotated corners */
+    transition: opacity .2s;
+}
+.cl_cg_wrap.cl_cg_loading { opacity: .5; }
+
+.cl_cg_photo {
+    position: relative;
+    background: #fbf8f2;
+    padding: 11px 11px 0;                /* white margin around the print, polaroid-style */
+    border: 1px solid rgba(90,75,60,.18);
+    border-radius: 3px;
+    box-shadow: 0 12px 26px rgba(0,0,0,.42), 0 2px 5px rgba(0,0,0,.28);
+    transform: rotate(var(--cl-tilt, -2.2deg));
+    transform-origin: 50% 62%;
+    transition: transform .28s cubic-bezier(.22,.61,.36,1), box-shadow .28s ease;
+}
+/* pick it up and look at it straight */
+.cl_cg_photo:hover {
+    transform: rotate(0deg) translateY(-3px) scale(1.015);
+    box-shadow: 0 18px 34px rgba(0,0,0,.5), 0 3px 7px rgba(0,0,0,.3);
+}
+
+/* the decorative "attached" tag clipped over the top edge — never clickable,
+   so it cannot steal a press from the photo underneath it */
+.cl_cg_clip {
+    position: absolute; top: -11px; left: 16px; right: 16px; z-index: 2;
+    display: flex; align-items: center; gap: 5px;
+    width: fit-content; max-width: calc(100% - 32px);
+    padding: 3px 10px;
+    font-size: .64rem; font-weight: 600; letter-spacing: .05em; line-height: 1.5;
+    white-space: nowrap;
+    color: #4d4238;
+    background: linear-gradient(180deg, #f7e9cd 0%, #ead7ae 100%);
+    border: 1px solid rgba(120,96,60,.38);
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.32);
+    transform: rotate(-3.5deg);
+    pointer-events: none;
+    user-select: none;
+}
+.cl_cg_clip span { overflow: hidden; text-overflow: ellipsis; }
+.cl_cg_clip i { font-size: .7rem; opacity: .8; }
+
+/* the emulsion: a hair of inset so the print reads as ink on paper */
+.cl_cg_print {
+    background: #17161a;
+    border-radius: 1px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.cl_cg_img { display: block; width: 100%; height: auto; }
+
+/* the caption strip is the photo's own bottom margin, so it is dark ink on white */
+.cl_cg_photo .cl_cg_bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 7px 2px 9px;
+    font-size: .72rem; color: #5a5047; background: none;
+    font-family: "Segoe Script", "Bradley Hand", "Snell Roundhand", cursive;
+}
+.cl_cg_hint { opacity: .75; }
+.cl_cg_photo .cl_cg_remove {
+    cursor: pointer; opacity: .5; color: #5a5047; padding: 3px 5px; border-radius: 4px;
+    transition: opacity .15s, color .15s, background .15s;
+}
+.cl_cg_photo .cl_cg_remove:hover { opacity: 1; color: #c2453f; background: rgba(194,69,63,.1); }
+
+@media (prefers-reduced-motion: reduce) {
+    .cl_cg_photo, .cl_cg_photo:hover { transition: none; }
+    .cl_cg_photo:hover { transform: rotate(var(--cl-tilt, -2.2deg)); }
+}
+
+/* ── ComfyUI workflow panel ──────────────────────────────────
+   Only visible when the ComfyUI request format is selected. */
+.character-lens .cl_comfy {
+    margin: 8px 0 4px; padding: 9px 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(159,182,216,.22);
+    background: rgba(159,182,216,.05);
+}
+.character-lens .cl_comfy textarea {
+    font-family: ui-monospace, Consolas, "Courier New", monospace;
+    font-size: .72rem; line-height: 1.4;
+}
+.character-lens .cl_comfy .cl_head { margin-bottom: 4px; }
+.character-lens #cl_comfy_note { line-height: 1.4; }
+.character-lens #cl_comfy_note.cl_bad { color: #e08a7a; opacity: .95; }
+.character-lens #cl_comfy_note.cl_good { color: #8bb072; opacity: .9; }
+/* fields a local ComfyUI has no use for: dimmed, still editable, never cleared */
+.character-lens .cl_dim { opacity: .45; }
+.character-lens .cl_mini.disabled { opacity: .5; pointer-events: none; }
