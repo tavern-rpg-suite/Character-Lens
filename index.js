@@ -1851,6 +1851,37 @@ async function cgResolve(record) {
     catch (e) { return null; }
 }
 
+/* Why photos vanished after a while.
+   Most image services answer with a LINK to the picture, not the picture — and the
+   link is temporary (often an hour or a day). It was stored as-is, so the chat kept
+   pointing at an address that later stopped answering, and the photo turned into a
+   broken frame with the prompt showing through.
+
+   Now the picture itself is fetched while the link still works and kept in
+   IndexedDB like any other drawn scene. When the service does not allow the page to
+   read its image (CORS), the link is still stored — nothing is worse than before —
+   and it is marked as remote, so a dead one is shown as such instead of broken. */
+function isRemoteUrl(u) { return /^https?:\/\//i.test(String(u || '')); }
+async function urlToDataUrl(url, timeoutMs = 20000) {
+    if (!isRemoteUrl(url)) return null;
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+    try {
+        const resp = await fetch(url, ctl ? { signal: ctl.signal } : undefined);
+        if (!resp.ok) return null;
+        const blob = await resp.blob();
+        if (!blob || !blob.size || (blob.type && !/^image\//i.test(blob.type))) return null;
+        return await new Promise((resolve) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(typeof fr.result === 'string' ? fr.result : null);
+            fr.onerror = () => resolve(null);
+            fr.readAsDataURL(blob);
+        });
+    } catch (e) {
+        return null;   // CORS, network, timeout — the caller keeps the link instead
+    } finally { if (timer) clearTimeout(timer); }
+}
+
 async function cgSaveImage(mesId, imgUrl, promptText, name) {
     const ctx = getContext();
     const msg = ctx.chat?.[mesId];
@@ -1858,6 +1889,11 @@ async function cgSaveImage(mesId, imgUrl, promptText, name) {
     if (!msg.extra || typeof msg.extra !== 'object') msg.extra = {};
 
     const record = { prompt: String(promptText || ''), date: new Date().toISOString(), name: String(name || msg.name || '') };
+    if (isRemoteUrl(imgUrl) && cgStore()) {
+        const bytes = await urlToDataUrl(imgUrl);
+        if (bytes) imgUrl = bytes;          // from here on it is a picture, not a link
+        else record.remote = true;          // the service would not let us keep a copy
+    }
     if (/^data:/i.test(imgUrl)) {
         const store = cgStore();
         if (store) {
@@ -1903,6 +1939,31 @@ async function restoreScene(mesId) {
     const $mes = $(`.mes[mesid="${mesId}"]`);
     if (!$mes.length || $mes.find('.cl_cg_wrap').length) return;
     insertScene($mes, url, record.prompt || '', record.name || '', mesId);
+    // An older scene saved as a link: while the link still answers, keep a real copy,
+    // so it does not die later. One attempt per chat load, quietly.
+    if (record.url && isRemoteUrl(record.url) && !record.key) healScene(mesId, record);
+}
+const cgHealing = new Set();
+async function healScene(mesId, record) {
+    if (cgHealing.has(record.url)) return;
+    cgHealing.add(record.url);
+    try {
+        const store = cgStore();
+        if (!store) return;
+        const bytes = await urlToDataUrl(record.url);
+        if (!bytes) return;
+        const ctx = getContext();
+        const msg = ctx.chat?.[mesId];
+        if (!msg?.extra?.[CG_KEY] || msg.extra[CG_KEY].url !== record.url) return;   // chat changed meanwhile
+        const key = `${CG_KEY}:${ctx.getCurrentChatId?.() ?? 'chat'}:${mesId}:${Date.now().toString(36)}`;
+        await store.setItem(key, bytes);
+        const fresh = Object.assign({}, msg.extra[CG_KEY], { key });
+        delete fresh.url; delete fresh.remote;
+        msg.extra[CG_KEY] = fresh;
+        await ctx.saveChat?.();
+    } catch (e) {
+        console.warn('[Character Lens] could not keep a copy of an older scene', e);
+    } finally { cgHealing.delete(record.url); }
 }
 
 /* The tilt is derived from the prompt rather than drawn at random, so redrawing the
@@ -1943,7 +2004,13 @@ function insertScene(mes$, imgUrl, promptText, name, mesId) {
                 /* NOT esc() here: .attr() escapes the value itself, so escaping first
                    printed the entities raw — a prompt with a quote in it showed up in
                    the tooltip as &quot; instead of ". */
-                $('<img class="cl_cg_img">').attr('src', imgUrl).attr('title', String(promptText ?? '')),
+                $('<img class="cl_cg_img">').attr('src', imgUrl).attr('title', String(promptText ?? '')).attr('alt', '')
+                    .on('error', function () {
+                        $(this).replaceWith($('<div class="cl_cg_gone"></div>').append(
+                            $('<i class="fa-solid fa-image"></i>'),
+                            $('<div></div>').text('This photo is no longer available — the image service only kept it for a while. Press the picture button on the message to draw it again.'),
+                        ).attr('title', String(promptText ?? '')));
+                    }),
             ),
             $('<div class="cl_cg_bar"></div>').append(
                 $('<span class="cl_cg_hint">🎨 Character Lens</span>'),
@@ -2935,8 +3002,10 @@ function bind() {
         saveSettingsDebounced();
         renderCGApi();
         // the identity/LoRA block lives on the character card and appears or hides
-        // with the very same switch, so that panel has to be redrawn as well
-        renderCGProfile();
+        // with the very same switch, so that panel has to be redrawn as well.
+        // (This used to call renderCGProfile(), which does not exist: switching the
+        // mode threw an error and the character block was never redrawn.)
+        renderCG();
     });
     $('#cl_cg_promptmodel').val(s.cgPromptModel).on('input', function () {
         s.cgPromptModel = $(this).val(); saveSettingsDebounced();

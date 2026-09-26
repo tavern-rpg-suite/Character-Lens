@@ -334,6 +334,8 @@ Migration is automatic and runs once.
 
 Scenes are attached to the message they belong to and come back when that message is rendered again — after a chat switch, an edit, a swipe, or scrolling back up.
 
+Most cloud image services answer with a **temporary link** rather than the picture itself; the link stops working after an hour or a day. Character Lens downloads the picture while the link still works and keeps the **picture**, not the link. Older scenes saved as links are copied the first time their chat is opened while the link is still alive. If a service refuses to let the page download its images, the link is kept as before — and once it expires, the photo says so plainly instead of showing a broken frame.
+
 ---
 
 ## 🛠️ When Something Looks Wrong
@@ -351,6 +353,7 @@ Open the console and look for:
 | Symptom                                      | Usually                                                               |
 | -------------------------------------------- | --------------------------------------------------------------------- |
 | 🔄 Buttons missing after an update           | Cached JS. Hard-refresh, then restart the ST server.                  |
+| 🖼️ "This photo is no longer available"       | An old scene saved as a temporary link that has expired. Draw it again. |
 | 🎲 Every scene comes out identical           | No `%seed%` in the workflow.                                          |
 | 🧬 LoRA has no effect                        | No `%lora%` in the workflow, or no trigger word in the identity tags. |
 | 🌈 Everything tinted the reference's colour  | IPAdapter weight too high, or the reference is a full scene. Crop it. |
