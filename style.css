@@ -231,3 +231,17 @@
     background: repeating-linear-gradient(135deg, rgba(0,0,0,.05) 0 10px, rgba(0,0,0,.08) 10px 20px);
 }
 .cl_cg_gone i { font-size: 1.8em; opacity: .5; }
+
+/* settings in framed groups, as in RPG Vitals */
+.character-lens .tsx-frame { margin: 8px 0; border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, .15)); border-radius: 8px; padding: 8px 10px 10px; background: rgba(0, 0, 0, .12); }
+.character-lens .tsx-frame > h4.tsx-framehead { margin: 0 0 6px; padding: 0; font-size: 1em; font-weight: 700; opacity: .92; border: 0; }
+.character-lens .tsx-frame > *:last-child { margin-bottom: 0; }
+.character-lens label.checkbox_label { display: flex; align-items: center; gap: 6px; }
+
+/* a drawer inside the settings, framed like the groups around it */
+.character-lens .tsx-subframe { margin: 8px 0; border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, .15)); border-radius: 8px; background: rgba(0, 0, 0, .12); }
+.character-lens .tsx-subframe > .inline-drawer-header { background: none !important; border: 0 !important; box-shadow: none; padding: 8px 10px !important; margin: 0 !important; min-height: 0; border-radius: 8px; }
+.character-lens .tsx-subframe > .inline-drawer-header b, .character-lens .tsx-subframe > .inline-drawer-header span { font-weight: 700; }
+.character-lens .tsx-subframe > .inline-drawer-header .inline-drawer-icon { font-size: 1em; opacity: .65; }
+.character-lens .tsx-subframe > .inline-drawer-content { padding: 0 10px 10px; }
+.character-lens .tsx-subframe .tsx-frame { background: rgba(0, 0, 0, .08); }
