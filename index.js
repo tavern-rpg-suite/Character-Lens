@@ -12,6 +12,7 @@ import { selected_group, groups } from '../../../group-chats.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 import { MacrosParser } from '../../../macros.js';
+import './suite-core.js';   // the suite's shared core: one seal for the floating buttons, the request queue, one "when and where"
 
 const MODULE = 'character_lens';
 
