@@ -1710,10 +1710,13 @@ function referenceForRequest(prof, isComfy, sprite) {
     return prof?.mode !== 'text' ? sprite : null;
 }
 
-async function generateSceneForMessage(mesId) {
-    if (cgRunning.has(mesId)) return;
+async function generateSceneForMessage(mesId, opts = {}) {
+    if (cgRunning.has(mesId)) return null;
     const $mes = $(`.mes[mesid="${mesId}"]`);
-    if (!$mes.length) { toastr.warning('That message is not on screen anymore.'); return; }
+    // (bridge) the novel asks for scenes of messages that may be scrolled away: then there is no button to mark busy
+    if (!$mes.length && !opts.quiet) { toastr.warning('That message is not on screen anymore.'); return null; }
+    if (!getContext().chat?.[mesId]) return null;
+    const chatAtStart = getContext().chatId;
 
     const avatar = avatarForMessage(mesId);
     const card = avatar ? buildCard(avatar) : null;
@@ -1744,6 +1747,8 @@ async function generateSceneForMessage(mesId) {
             descBits.push(bits.join('\n'));
         }
         descBits.push(`MOMENT:\n${contextAround(mesId)}`);
+        // (bridge) the novel saw what this beat should look like: given to the writer as it is
+        if (opts.hint && String(opts.hint).trim()) descBits.push(`SCENE TO DRAW:\n${String(opts.hint).trim().slice(0, 600)}`);
 
         // 'always' and 'never' are the manual override; 'auto' asks the writer
         const mode = s.partnerMode || 'auto';
@@ -1796,7 +1801,10 @@ async function generateSceneForMessage(mesId) {
             ...regional,
         });
         const who = (avatar ? charByAvatar(avatar)?.name : '') || getContext().chat?.[mesId]?.name || '';
-        insertScene($mes, imgUrl, scenePrompt, who, mesId);
+        // another chat by now: the picture belongs to a message that is not here any more
+        if (getContext().chatId !== chatAtStart) return null;
+        const $now = $(`.mes[mesid="${mesId}"]`);
+        if ($now.length) insertScene($now, imgUrl, scenePrompt, who, mesId);
         // shown first, stored second: a storage hiccup must not cost the picture
         try {
             await cgSaveImage(mesId, imgUrl, scenePrompt, who);
@@ -1804,9 +1812,12 @@ async function generateSceneForMessage(mesId) {
             console.warn('[Character Lens] the scene could not be saved to the chat', e);
             toastr.warning('The scene was drawn but could not be saved — it will disappear when you switch chats.', 'Character Lens');
         }
+        try { document.dispatchEvent(new CustomEvent('rpg:lens-scene', { detail: { mesId } })); } catch (e) { /* nobody listens */ }
+        return imgUrl;
     } catch (err) {
         console.error('[Character Lens] scene art', err);
         toastr.error(esc(err?.message ?? err), 'Character Lens — Scene Art');
+        return null;
     } finally {
         cgRunning.delete(mesId);
         setSceneBusy($mes, false);
@@ -3486,8 +3497,43 @@ function frameSettings(root) {
     });
 }
 
+/* ── The bridge (asked for by the author): RPG Living Scene's novel shows these scenes full
+   screen and, at a turning point, asks for one. Everything is drawn here, with this
+   panel's settings (references, ComfyUI, style), so a character looks like themselves.
+     window.RPG.lens.available           — true while this extension is loaded
+     window.RPG.lens.isEnabled()         — the extension is switched on
+     window.RPG.lens.drawScene(id, hint) — draws a scene for chat message `id`; resolves to the
+                                           picture (data: or http(s) URL) or null
+     window.RPG.lens.sceneFor(id)        — the scene already drawn for that message, or null
+     window.RPG.lens.drawing(id)         — a scene for it is being drawn right now
+     window.RPG.lens.deleteScene(id)     — deletes the scene of that message
+   A finished scene also fires document event 'rpg:lens-scene' { mesId }. */
+function installLensBridge() {
+    const RPG = (window.RPG = window.RPG || {});
+    RPG.lens = Object.freeze({
+        available: true,
+        isEnabled: () => !!settings().enabled,
+        drawScene: (mesId, hint) => {
+            const id = Number(mesId);
+            if (!Number.isInteger(id) || id < 0 || !settings().enabled) return Promise.resolve(null);
+            return generateSceneForMessage(id, { hint: typeof hint === 'string' ? hint : '', quiet: true });
+        },
+        sceneFor: async (mesId) => {
+            const id = Number(mesId);
+            if (!Number.isInteger(id) || id < 0) return null;
+            const rec = getContext().chat?.[id]?.extra?.[CG_KEY];
+            const url = rec ? await cgResolve(rec) : null;
+            return typeof url === 'string' && (/^data:image\//i.test(url) || /^https?:\/\//i.test(url) || url.startsWith('/')) ? url : null;
+        },
+        drawing: (mesId) => cgRunning.has(Number(mesId)),
+        // deletes the scene of that message (the picture and its record), as the ✕ under it does
+        deleteScene: async (mesId) => { const id = Number(mesId); if (!Number.isInteger(id) || id < 0) return false; await cgDeleteImage(id); $(`.mes[mesid="${id}"]`).find('.cl_cg_wrap').remove(); try { document.dispatchEvent(new CustomEvent('rpg:lens-scene', { detail: { mesId: id } })); } catch (e) { } return true; },
+    });
+}
+
 jQuery(async () => {
     settings();
+    installLensBridge();
     const host = $('#extensions_settings2').length ? '#extensions_settings2' : '#extensions_settings';
     $(host).append(HTML);
     frameSettings(document.querySelector('.character-lens'));
